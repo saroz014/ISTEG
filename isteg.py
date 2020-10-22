@@ -56,7 +56,9 @@ def encode(img_path):
         print('Message is empty')
         encode(img_path)
     img = Image.open(img_path, 'r')
-
+    if img.mode.lower() != 'rgb':
+        print('Image is not in RBG format.')
+        return
     width, height = img.size
     img_bytes = width * height * 3 // 9
 

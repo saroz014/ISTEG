@@ -37,14 +37,13 @@ def modify_pixel(img_data, binary_message):
         yield pixels[6:]
 
 
-def modify_image(new_img, message):
-    w = new_img.size[0]
+def modify_image(new_img, img_width, message):
     (x, y) = (0, 0)
     img_data = iter(new_img.getdata())
     binary_message = [f"{ord(letter):08b}" for letter in message]
     for pixel in modify_pixel(img_data, binary_message):
         new_img.putpixel((x, y), tuple(pixel))
-        if x == w - 1:
+        if x == img_width - 1:
             x = 0
             y += 1
         else:
@@ -57,11 +56,18 @@ def encode(img_path):
         print('Message is empty')
         encode(img_path)
     img = Image.open(img_path, 'r')
+
+    width, height = img.size
+    img_bytes = width * height * 3 // 9
+
+    if len(message) > img_bytes:
+        print('Image size is small for the message. Either provide a bigger image or a shorter message.')
+        return
     new_img = img.copy()
-    modify_image(new_img, message)
+    modify_image(new_img, width, message)
 
     new_img_name = input("Enter the name of new image: ")
-    new_img.save(new_img_name, 'PNG')
+    new_img.save(f'{new_img_name}.png')
 
 
 def decode(img_path):

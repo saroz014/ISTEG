@@ -1,3 +1,4 @@
+import onetimepad
 from PIL import Image
 
 
@@ -55,6 +56,8 @@ def encode(img_path):
     if len(message) == 0:
         print('Message is empty')
         encode(img_path)
+    password = input('Enter password: ')
+    cipher = onetimepad.encrypt(message, password)
     img = Image.open(img_path, 'r')
     if img.mode.lower() != 'rgb':
         print('Image is not in RBG format.')
@@ -66,7 +69,7 @@ def encode(img_path):
         print('Image size is small for the message. Either provide a bigger image or a shorter message.')
         return
     new_img = img.copy()
-    modify_image(new_img, width, message)
+    modify_image(new_img, width, cipher)
 
     new_img_name = input("Enter the name of new image: ")
     new_img.save(f'{new_img_name}.png')
@@ -74,6 +77,7 @@ def encode(img_path):
 
 def decode(img_path):
     img = Image.open(img_path, 'r')
+    password = input('Enter password: ')
     img_data = iter(img.getdata())
     message = ''
 
@@ -88,6 +92,7 @@ def decode(img_path):
 
         message += chr(int(bin_str, 2))
         if pixels[-1] % 2 != 0:
+            message = onetimepad.decrypt(message, password)
             return message
 
 

@@ -3,6 +3,12 @@ from PIL import Image
 
 
 def get_updated_pixel_value(bit, pix):
+    """
+    Updates LSB of the pixel with the bit value from the message
+    :param bit: bit value from the message
+    :param pix: pixel to be updated
+    """
+
     if bit == '0' and pix % 2 != 0:
         return pix - 1
     elif bit == '1' and pix % 2 == 0:
@@ -13,6 +19,14 @@ def get_updated_pixel_value(bit, pix):
 
 
 def get_updated_last_pixel_value(current_index, last_index, last_pixel):
+    """
+    Updates LSB of the last pixel in a batch by comparing the current index with the last index of the message.
+    0 LSB means keep reading, 1 LSB means the message is over
+    :param current_index: current index of a bit while looping the binary message
+    :param last_index: index of the last bit of the binary message
+    :param last_pixel: pixel to be updated.
+    """
+
     if current_index == last_index:
         if last_pixel % 2 == 0:
             if last_pixel != 0:
@@ -26,6 +40,14 @@ def get_updated_last_pixel_value(current_index, last_index, last_pixel):
 
 
 def modify_pixel(img_data, binary_message):
+    """
+    Modifies the LSB of the image based on the bits of the binary message. A batch of 9 consecutive pixels is formed.
+    8 consecutive pixels will contain the message while the last pixel will contain the information to whether to stop
+    or read further
+    :param img_data: pixel values of the image
+    :param binary_message: message to be hidden in the image in its binary representation
+    """
+
     last_index = len(binary_message) - 1
     for i, binary_char in enumerate(binary_message):
         pixels = list(next(img_data) + next(img_data) + next(img_data))
@@ -38,12 +60,19 @@ def modify_pixel(img_data, binary_message):
         yield pixels[6:]
 
 
-def modify_image(new_img, img_width, message):
+def modify_image(img, img_width, message):
+    """
+    Modifies the image with the updated pixel value
+    :param img: image object
+    :param img_width: width of the image
+    :param message: message to be hidden in the image
+    """
+
     (x, y) = (0, 0)
-    img_data = iter(new_img.getdata())
+    img_data = iter(img.getdata())
     binary_message = [f"{ord(letter):08b}" for letter in message]
     for pixel in modify_pixel(img_data, binary_message):
-        new_img.putpixel((x, y), tuple(pixel))
+        img.putpixel((x, y), tuple(pixel))
         if x == img_width - 1:
             x = 0
             y += 1
@@ -52,16 +81,24 @@ def modify_image(new_img, img_width, message):
 
 
 def encode(img_path):
+    """
+    Performs some checks, calls necessary functions to encode the message into the image and saves the updated image
+    :param img_path: image path
+    """
+
     message = input('Enter message: ')
     if len(message) == 0:
         print('Message is empty')
         encode(img_path)
+
     password = input('Enter password: ')
     cipher = onetimepad.encrypt(message, password)
+
     img = Image.open(img_path, 'r')
     if img.mode.lower() != 'rgb':
         print('Image is not in RBG format.')
         return
+
     width, height = img.size
     img_bytes = width * height * 3 // 9
 
@@ -76,6 +113,10 @@ def encode(img_path):
 
 
 def decode(img_path):
+    """
+    Decodes the message hidden within the image
+    :param img_path: image path
+    """
     img = Image.open(img_path, 'r')
     password = input('Enter password: ')
     img_data = iter(img.getdata())
